@@ -27,9 +27,11 @@ void PatchJmp(DWORD dwAddress, DWORD dwDest)
 	*(BYTE*)dwAddress = JMP;
 	*(DWORD*)(dwAddress + 1) = relative_address(dwAddress, dwDest);
 }
-void PatchRet(DWORD dwAddress)
+void PatchRetZero(DWORD dwAddress)
 {
-	*(BYTE*)dwAddress = RET;
+	*(BYTE*)(dwAddress + 0) = 0x33;
+	*(BYTE*)(dwAddress + 1) = 0xC0;
+	*(BYTE*)(dwAddress + 2) = RET;
 }
 
 DWORD GetFuncAddress(LPCSTR lpModule, LPCSTR lpFunc)
