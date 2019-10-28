@@ -17,9 +17,16 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "detours.lib")
 
-#define OPT_APPNAME		"Rebirth 176"
-#define OPT_PATTERN		"8.31.99.1" //8.31.99.141
-#define OPT_HOSTNAME	"127.0.0.1"
+#define OPT_APPNAME			"Rebirth 176"
+#define OPT_ADDR_HOSTNAME	"127.0.0.1"
+
+#define OPT_ADDR_SEARCH		"8.31.99."
+#define OPT_ADDR_NEXON		"8.31.99.141"
+
+#define OPT_PORT_LOW		8484
+#define OPT_PORT_HIGH		8989
+
+#define OPT_APPVERSION		"2.0"
 
 //---------------------------------------------------------------------------------------------
 
@@ -30,12 +37,11 @@ typedef BOOL(__cdecl* pNMCO_CallNMFunc)(int uFuncCode, BYTE* pCallingData, BYTE*
 //---------------------------------------------------------------------------------------------
 
 pWSPStartup			g_WSPStartup;
+WSPPROC_TABLE		g_ProcTable;
+DWORD				g_dwAddrNexon;
+
 pNMCO_CallNMFunc	g_NMCO_CallNMFunc;
 LPSTR				g_lpUserName = new char[PASSPORT_SIZE];
-
-WSPPROC_TABLE		g_ProcTable;
-SOCKET				g_hGameSock;
-DWORD				g_dwNexonAddr;
 
 //---------------------------------------------------------------------------------------------
 
@@ -51,41 +57,52 @@ void FuckMaple()
 
 int WINAPI WSPGetPeerName_Hook(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpErrno)
 {
-	int ret = g_ProcTable.lpWSPGetPeerName(s, name, namelen, lpErrno);
+	int nRet = g_ProcTable.lpWSPGetPeerName(s, name, namelen, lpErrno);
 
-	char buf[50];
-	DWORD len = 50;
-	WSAAddressToStringA((sockaddr*)name, *namelen, NULL, buf, &len);
-	Log("WSPGetPeerName Original: %s", buf);
-
-	if (s == g_hGameSock)
+	if (nRet == SOCKET_ERROR)
 	{
-		sockaddr_in* service = (sockaddr_in*)name;
-		memcpy(&service->sin_addr, &g_dwNexonAddr, sizeof(DWORD));
+		Log("[WSPGetPeerName] ErrorCode: %d", *lpErrno);
+	}
+	else
+	{
+		char szAddr[50];
+		DWORD dwLen = 50;
+		WSAAddressToStringA((sockaddr*)name, *namelen, NULL, szAddr, &dwLen);
 
-		Log("WSPGetPeerName Replaced: %x", g_dwNexonAddr);
+		sockaddr_in* service = (sockaddr_in*)name;
+
+		auto nPort = ntohs(service->sin_port);
+
+		if (nPort >= OPT_PORT_LOW && nPort <= OPT_PORT_HIGH)
+		{
+			service->sin_addr.S_un.S_addr = inet_addr(OPT_ADDR_NEXON);
+			Log("[WSPGetPeerName] Replaced: %s", OPT_ADDR_NEXON);
+		}
+		else
+		{
+			Log("[WSPGetPeerName] Original: %s", szAddr);
+		}
 	}
 
-	return  ret;
+	return  nRet;
 }
 
 int WINAPI WSPConnect_Hook(SOCKET s, const struct sockaddr *name, int namelen, LPWSABUF lpCallerData, LPWSABUF lpCalleeData, LPQOS lpSQOS, LPQOS lpGQOS, LPINT lpErrno)
 {
-	char buf[50];
-	DWORD len = 50;
-	WSAAddressToStringA((sockaddr*)name, namelen, NULL, buf, &len);
-	Log("WSPConnect Original: %s", buf);
+	char szAddr[50];
+	DWORD dwLen = 50;
+	WSAAddressToStringA((sockaddr*)name, namelen, NULL, szAddr, &dwLen);
 
-	if (strstr(buf, OPT_PATTERN))
+	sockaddr_in* service = (sockaddr_in*)name;
+
+	if (strstr(szAddr, OPT_ADDR_SEARCH))
 	{
-		g_hGameSock = s;
-
-		Log("WSPConnect Replaced: %s", OPT_HOSTNAME);
-
-		sockaddr_in* service = (sockaddr_in*)name;
-		memcpy(&g_dwNexonAddr, &service->sin_addr, sizeof(DWORD)); //sin_adder -> g_dwNexonAddr
-
-		service->sin_addr.S_un.S_addr = inet_addr(OPT_HOSTNAME);
+		service->sin_addr.S_un.S_addr = inet_addr(OPT_ADDR_HOSTNAME);
+		Log("[WSPConnect] Replaced: %s", OPT_ADDR_HOSTNAME);
+	}
+	else
+	{
+		Log("[WSPConnect] Original: %s", szAddr);
 	}
 
 	return g_ProcTable.lpWSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
@@ -93,7 +110,7 @@ int WINAPI WSPConnect_Hook(SOCKET s, const struct sockaddr *name, int namelen, L
 
 int WINAPI WSPStartup_Hook(WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFO lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable)
 {
-	Log("Hijacked WinSock ProcTable");
+	Log("[WSPStartup] Hijacked ProcTable");
 
 	int ret = g_WSPStartup(wVersionRequested, lpWSPData, lpProtocolInfo, UpcallTable, lpProcTable);
 	g_ProcTable = *lpProcTable;
@@ -299,7 +316,20 @@ bool Hook_WriteErrorLogA(bool bEnable)
 }
 
 //---------------------------------------------------------------------------------------------
-long WINAPI ExceptionProc(EXCEPTION_POINTERS* pExceptionInfo)
+
+void WINAPI HeaderProc(DWORD dwPID)
+{
+	Log("------------------------------------------------");
+	Log("[Rajan] [%s] [v%s]", OPT_APPNAME, OPT_APPVERSION);
+	Log("[Rajan]       \\    /\\  ");
+	Log("[Rajan]        )  ( ')   ");
+	Log("[Rajan]       (  /  )    ");
+	Log("[Rajan] cat    \\(__)|   ");
+	Log("[Rajan] [PID: %d] [Built: %s]", dwPID, __TIMESTAMP__);
+	Log("------------------------------------------------");
+}
+
+long WINAPI ExcepProc(EXCEPTION_POINTERS* pExceptionInfo)
 {
 	Log("RegException: %08X (%08X)", pExceptionInfo->ExceptionRecord->ExceptionCode, pExceptionInfo->ExceptionRecord->ExceptionAddress);
 
@@ -308,31 +338,29 @@ long WINAPI ExceptionProc(EXCEPTION_POINTERS* pExceptionInfo)
 
 DWORD WINAPI MainProc(PVOID)
 {
-	AddVectoredExceptionHandler(1, ExceptionProc);
-
 	DWORD dwCurProcId = GetCurrentProcessId();
-	Log("%s [PID: %i] [Built: %s]", OPT_APPNAME, dwCurProcId, __TIMESTAMP__);
+	HeaderProc(dwCurProcId);
 
 	if (!Hook_Winsock())
-		Log("Failed Hook_Winsock");
+		Log("Failed Hooking Winsock");
 
 	//if (!Hook_NMCO())
-	//	Log("Failed Hook_NMCO");
+	//	Log("Failed Hooking NMCO");
 
 	if (!Hook_CreateWindowExA(true))
-		Log("Failed Hook_CreateWindowExA");
+		Log("Failed Hooking CreateWindowExA");
 
 	if (!Hook_CreateMutexA(true))
-		Log("Failed Hook_CreateMutexA");
+		Log("Failed Hooking CreateMutexA");
 
 	//if (!Hook_SetProgramState(true))
-	//	Log("Failed Hook_SetProgramState");
+	//	Log("Failed Hooking SetProgramState");
 
 	if (!Hook_WriteStageLogA(true))
-		Log("Failed Hook_WriteStageLogA");
+		Log("Failed Hooking WriteStageLogA");
 
 	if (!Hook_WriteErrorLogA(true))
-		Log("Failed Hook_WriteErrorLogA");
+		Log("Failed Hooking WriteErrorLogA");
 
 	return 0;
 }
@@ -342,6 +370,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
 		DisableThreadLibraryCalls(hinstDLL);
+
+		//AddVectoredExceptionHandler(1, ExcepProc);
 		CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)&MainProc, NULL, NULL, NULL);
 	}
 	else if (fdwReason == DLL_PROCESS_DETACH)
