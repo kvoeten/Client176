@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="NMCO">
-      <UniqueIdentifier>{6f97bc08-f054-44ed-a9c9-c01779c2e45a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Proxy">
       <UniqueIdentifier>{045583ed-fbb5-4347-ba91-ef608874238a}</UniqueIdentifier>
     </Filter>
@@ -24,39 +21,30 @@
     <ClCompile Include="EntryPoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NMCO\NMDataObject.cpp">
-      <Filter>NMCO</Filter>
-    </ClCompile>
-    <ClCompile Include="NMCO\NMFunctionObject.cpp">
-      <Filter>NMCO</Filter>
-    </ClCompile>
-    <ClCompile Include="NMCO\NMSerializable.cpp">
-      <Filter>NMCO</Filter>
-    </ClCompile>
     <ClCompile Include="Proxy\ijl15.cpp">
       <Filter>Proxy</Filter>
     </ClCompile>
+    <ClCompile Include="WinHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MapleHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SockHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Functions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Functions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NMCO\NMDataObject.h">
-      <Filter>NMCO</Filter>
-    </ClInclude>
-    <ClInclude Include="NMCO\NMFunctionObject.h">
-      <Filter>NMCO</Filter>
-    </ClInclude>
-    <ClInclude Include="NMCO\NMGeneral.h">
-      <Filter>NMCO</Filter>
-    </ClInclude>
-    <ClInclude Include="NMCO\NMSerializable.h">
-      <Filter>NMCO</Filter>
-    </ClInclude>
     <ClInclude Include="Proxy\ijl15.h">
       <Filter>Proxy</Filter>
     </ClInclude>
     <ClInclude Include="detours.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

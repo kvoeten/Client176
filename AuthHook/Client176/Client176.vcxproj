@@ -120,18 +120,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EntryPoint.cpp" />
-    <ClCompile Include="NMCO\NMDataObject.cpp" />
-    <ClCompile Include="NMCO\NMFunctionObject.cpp" />
-    <ClCompile Include="NMCO\NMSerializable.cpp" />
+    <ClCompile Include="Functions.cpp" />
+    <ClCompile Include="MapleHook.cpp" />
     <ClCompile Include="Proxy\ijl15.cpp" />
+    <ClCompile Include="SockHook.cpp" />
+    <ClCompile Include="WinHook.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="detours.h" />
-    <ClInclude Include="Functions.h" />
-    <ClInclude Include="NMCO\NMDataObject.h" />
-    <ClInclude Include="NMCO\NMFunctionObject.h" />
-    <ClInclude Include="NMCO\NMGeneral.h" />
-    <ClInclude Include="NMCO\NMSerializable.h" />
+    <ClInclude Include="Global.h" />
     <ClInclude Include="Proxy\ijl15.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

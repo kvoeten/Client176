@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include "Global.h"
 #include "detours.h"
 #include <stdio.h>
 
@@ -32,6 +32,13 @@ void PatchRetZero(DWORD dwAddress)
 	*(BYTE*)(dwAddress + 0) = 0x33;
 	*(BYTE*)(dwAddress + 1) = 0xC0;
 	*(BYTE*)(dwAddress + 2) = RET;
+}
+void PatchNop(DWORD dwAddress, DWORD dwCount)
+{
+	for (int i = 0; i < dwCount; i++)
+	{
+		*(BYTE*)(dwAddress + i) = NOP;
+	}
 }
 
 DWORD GetFuncAddress(LPCSTR lpModule, LPCSTR lpFunc)
