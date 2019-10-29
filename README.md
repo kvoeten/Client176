@@ -1,6 +1,9 @@
-# Client176
+## MapleStory Global v176.1 Localhost Enabler
 
-MapleStory Global v176.1 Localhost Enabler
+- NGS Removed
+- MSCRC Patched
+- Nexon Logging Removed
+- Multi Client Enabled
 
 Launched via the following...
 
