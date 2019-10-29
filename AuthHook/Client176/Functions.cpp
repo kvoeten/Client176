@@ -2,9 +2,9 @@
 #include "detours.h"
 #include <stdio.h>
 
-#define JMP			0xE9
-#define NOP			0x90
-#define RET			0xC3
+#define JMP		0xE9
+#define NOP		0x90
+#define RET		0xC3
 
 #define relative_address(frm, to) (int)(((int)to - (int)frm) - 5)
 

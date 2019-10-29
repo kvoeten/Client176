@@ -2,10 +2,7 @@
 #include "Global.h"
 #include <WS2spi.h>
 
-typedef int (WINAPI* pWSPStartup)(WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFO lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable);
-
-pWSPStartup			g_WSPStartup;
-WSPPROC_TABLE		g_ProcTable;
+WSPPROC_TABLE g_ProcTable;
 
 int WINAPI WSPGetPeerName_Hook(SOCKET s, struct sockaddr *name, LPINT namelen, LPINT lpErrno)
 {
@@ -60,27 +57,31 @@ int WINAPI WSPConnect_Hook(SOCKET s, const struct sockaddr *name, int namelen, L
 	return g_ProcTable.lpWSPConnect(s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, lpErrno);
 }
 
-int WINAPI WSPStartup_Hook(WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFO lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable)
+bool Hook_WSPStartup(bool bEnable)
 {
-	Log("[WSPStartup] Hijacked ProcTable");
+	static auto _WSPStartup = decltype(&WSPStartup)(GetFuncAddress("MSWSOCK", "WSPStartup"));
 
-	int ret = g_WSPStartup(wVersionRequested, lpWSPData, lpProtocolInfo, UpcallTable, lpProcTable);
-	g_ProcTable = *lpProcTable;
+	decltype(&WSPStartup) Hook = [](WORD wVersionRequested, LPWSPDATA lpWSPData, LPWSAPROTOCOL_INFOW lpProtocolInfo, WSPUPCALLTABLE UpcallTable, LPWSPPROC_TABLE lpProcTable) -> int
+	{
+		Log("[WSPStartup] Hijacked ProcTable");
 
-	lpProcTable->lpWSPConnect = WSPConnect_Hook;
-	lpProcTable->lpWSPGetPeerName = WSPGetPeerName_Hook;
+		int ret = _WSPStartup(wVersionRequested, lpWSPData, lpProtocolInfo, UpcallTable, lpProcTable);
+		g_ProcTable = *lpProcTable;
 
-	return ret;
+		lpProcTable->lpWSPConnect = WSPConnect_Hook;
+		lpProcTable->lpWSPGetPeerName = WSPGetPeerName_Hook;
+
+		return ret;
+	};
+
+	return SetHook(bEnable, reinterpret_cast<void**>(&_WSPStartup), Hook);
 }
 
 bool HookSockApi()
 {
-	auto address = GetFuncAddress("MSWSOCK", "WSPStartup");
+	bool bResult = true;
 
-	if (!address)
-		return FALSE;
+	bResult &= Hook_WSPStartup(true);
 
-	g_WSPStartup = (pWSPStartup)address;
-
-	return SetHook(true, (PVOID*)&g_WSPStartup, (PVOID)WSPStartup_Hook);
+	return bResult;
 }

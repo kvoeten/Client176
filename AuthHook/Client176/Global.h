@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------------------------
 
 #define OPT_APPNAME			"Rebirth 176"
-#define OPT_APPVERSION		"3.1"
+#define OPT_APPVERSION		"3.2"
 #define OPT_ADDR_HOSTNAME	"127.0.0.1"
 
 #define OPT_ADDR_SEARCH		"8.31.99."

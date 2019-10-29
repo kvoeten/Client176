@@ -10,9 +10,7 @@ bool Hook_CreateWindowExA(bool bEnable)
 
 		if (!strcmp(lpClassName, "StartUpDlgClass"))
 		{
-			//TODO : REVIEW THIS
-			//FuckMaple();
-
+			FuckMaple();
 			return NULL;
 		}
 		else if (!strcmp(lpClassName, "NexonADBallon"))
@@ -21,8 +19,6 @@ bool Hook_CreateWindowExA(bool bEnable)
 		}
 		else if (!strcmp(lpClassName, "MapleStoryClass"))
 		{
-			FuckMaple();
-
 			lpLocalWndName = OPT_APPNAME;
 			Log("CWvsApp [%#08x]", lpParam);
 		}

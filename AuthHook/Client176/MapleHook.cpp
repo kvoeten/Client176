@@ -80,7 +80,6 @@ bool Hook_StringPool__GetString(bool enable)
 	return SetHook(enable, reinterpret_cast<void**>(&StringPool__GetString), Hook);
 }
 
-
 bool HookMapleApi()
 {
 	bool bResult = true;
@@ -89,7 +88,6 @@ bool HookMapleApi()
 	bResult &= Hook_WriteErrorLogA(true);
 	//bResult &= Hook_SetProgramState(true);
 	//bResult &= Hook_StringPool__GetString(true);
-
 
 	return bResult;
 }
